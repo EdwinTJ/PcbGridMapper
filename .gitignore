@@ -361,5 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-
+50257_vC.0_PICK.csv
+Panel 436-5002_R.csv
 *.csv
+/PcbGridMapper/50257_vC.0_PICK.csv
+/PcbGridMapper/BoardA_Centroid.csv
+/PcbGridMapper/Panel 436-5002_R.csv
