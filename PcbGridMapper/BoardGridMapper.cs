@@ -27,8 +27,7 @@ public class BoardGridMapper
 
     private readonly Dictionary<string, ComponentData> componentMap = new Dictionary<string, ComponentData>(StringComparer.OrdinalIgnoreCase);
 
-    // ... (UnitStrippingDoubleConverter and GetFileConfiguration methods remain the same) ...
-
+    private readonly Dictionary<string, List<string>> primaryZoneComponentMap = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
     private class UnitStrippingDoubleConverter : DoubleConverter
     {
         public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
@@ -144,6 +143,7 @@ public class BoardGridMapper
 
                         char rowLabel = (char)('A' + rowIndex);
                         int colLabel = colIndex + 1;
+                        string primaryZone = $"{rowLabel}{colLabel}";
 
                         // 2. SECONDARY GRID (3x3) - Calculation for high precision
 
@@ -165,7 +165,7 @@ public class BoardGridMapper
 
 
                         // 3. ASSIGN FINAL TWO-TIERED LABEL (A1-23)
-                        comp.GridZone = $"{rowLabel}{colLabel}-{secondaryRowLabel}{secondaryColLabel}";
+                        comp.GridZone = $"{primaryZone}-{secondaryRowLabel}{secondaryColLabel}";
 
                         if (!componentMap.TryAdd(comp.Designator, comp))
                         {
@@ -188,6 +188,79 @@ public class BoardGridMapper
         }
     }
 
+    public void DisplayGrid(string targetZone)
+    {
+        Console.WriteLine("\n--- Board Grid (4x4) ---");
+
+        // Rows are A (bottom) to D (top). We loop from top (D) down to bottom (A)
+        for (int i = GridRows - 1; i >= 0; i--)
+        {
+            char rowLabel = (char)('A' + i);
+
+            // 1. Draw the top/middle border line
+            Console.WriteLine("+-------+-------+-------+-------+");
+
+            // 2. Draw the row labels and component markers
+            for (int j = 0; j < GridCols; j++)
+            {
+                int colLabel = j + 1;
+                string currentZone = $"{rowLabel}{colLabel}";
+
+                // Get marker status:
+                // '⦿' for the target component's zone (only use the primary part of the zone string)
+                // '•' for a zone with other components
+                // ' ' for an empty zone
+                string marker = "       "; // 7 spaces wide
+
+                if (currentZone.Equals(targetZone, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Center the primary zone label and highlight the zone
+                    Console.BackgroundColor = ConsoleColor.DarkGreen;
+                    Console.ForegroundColor = ConsoleColor.White;
+                    marker = $"|  {currentZone}  ";
+                }
+                else if (primaryZoneComponentMap.ContainsKey(currentZone))
+                {
+                    // Zone has components, but it's not the target
+                    marker = $"|  {currentZone}•  ";
+                }
+                else
+                {
+                    // Empty zone
+                    marker = $"|  {currentZone}   ";
+                }
+
+                Console.Write(marker);
+                Console.ResetColor(); // Reset color after printing the cell
+            }
+            Console.WriteLine("|"); // End of the component markers line
+
+            // 3. Draw the bottom row with the coordinate marker (a simple dot for now)
+            for (int j = 0; j < GridCols; j++)
+            {
+                int colLabel = j + 1;
+                string currentZone = $"{rowLabel}{colLabel}";
+
+                if (currentZone.Equals(targetZone, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Highlight the cell containing the target component
+                    Console.BackgroundColor = ConsoleColor.DarkGreen;
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.Write("|   ⦿   "); // Use '⦿' for the exact component marker
+                }
+                else
+                {
+                    // Empty cell
+                    Console.Write("|       ");
+                }
+                Console.ResetColor();
+            }
+            Console.WriteLine("|"); // End of the component row
+        }
+
+        // 4. Draw the final bottom border
+        Console.WriteLine("+-------+-------+-------+-------+");
+    }
     public ComponentData FindComponent(string designator)
     {
         componentMap.TryGetValue(designator, out var comp);

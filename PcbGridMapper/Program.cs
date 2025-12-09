@@ -44,6 +44,9 @@ internal class Program
             var component = mapper.FindComponent(searchRd);
             if (component != null)
             {
+                string primaryZone = component.GridZone!.Split('-')[0];
+                mapper.DisplayGrid(primaryZone);
+
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"\n✅ FOUND: {component.Designator}");
 
